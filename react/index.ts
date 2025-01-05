@@ -1,4 +1,3 @@
-export * from "./linkBridge";
-export type * from "./types";
-export * from "./createLinkBridgeProvider";
-export * from "./useBridge";
+export * from './linkBridge';
+export * from './createLinkBridgeProvider';
+export * from './useBridge';
