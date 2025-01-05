@@ -20,12 +20,3 @@ export type ExtractStore<S> = S extends { getState: () => infer T } ? T : never;
 export type OnlyJSON<T> = {
   [P in keyof T as T[P] extends RawJSON ? P : never]: T[P];
 };
-
-export type ExcludePrimitive<T> = {
-  [P in keyof T as T[P] extends RawJSON ? never : P]: T[P];
-};
-
-export type KeyOfOrString<T> = T extends undefined ? string : keyof T;
-
-
-
