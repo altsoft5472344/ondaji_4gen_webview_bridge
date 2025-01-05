@@ -1,4 +1,4 @@
-import type { Bridge, BridgeStore, OnlyJSON, Primitive } from "../../types";
+import type { Bridge, BridgeStore, OnlyJSON, Primitive } from '../types';
 
 export type StoreCallback<T> = ({
   get,
@@ -13,22 +13,20 @@ export type StoreCallback<T> = ({
    */
 }) => T;
 
-export const bridge = <T extends Bridge>(
-  procedures: T | StoreCallback<T>
-): BridgeStore<T> => {
-  console.log("===== bridge =====");
+export const bridge = <T extends Bridge>(procedures: T | StoreCallback<T>): BridgeStore<T> => {
+  console.log('===== bridge =====');
 
   const getState = () => {
-    console.log("===== bridge // getState =====");
+    console.log('===== bridge // getState =====');
     return state;
   };
 
   const setState = (newState: Partial<OnlyJSON<T>>) => {
-    console.log("===== bridge // setState =====");
+    console.log('===== bridge // setState =====');
 
     const _newState = {
       ...state,
-      ...newState
+      ...newState,
     };
 
     const prevState = state;
@@ -38,9 +36,8 @@ export const bridge = <T extends Bridge>(
     emitChange(state, prevState);
   };
 
-
   let state: T =
-    typeof procedures === "function"
+    typeof procedures === 'function'
       ? procedures({
           get: getState,
           set: setState,
@@ -52,7 +49,7 @@ export const bridge = <T extends Bridge>(
 
   /** 상태 변경 시 리스너들에게 알림 */
   const emitChange = (newState: T, prevState: T) => {
-    console.log("===== bridge // emitChange =====");
+    console.log('===== bridge // emitChange =====');
 
     for (const listener of listeners) {
       listener(newState, prevState);
@@ -61,7 +58,7 @@ export const bridge = <T extends Bridge>(
 
   /** 리스너 구독 및 해제 함수 */
   const subscribe = (listener: (newState: T, prevState: T) => void) => {
-    console.log("===== bridge // subscribe =====");
+    console.log('===== bridge // subscribe =====');
 
     listeners.add(listener);
     return () => listeners.delete(listener);
@@ -80,18 +77,14 @@ interface HandleBridgeArgs<ArgType = unknown> {
   args?: ArgType[];
 }
 
-export const handleBridge = async ({
-  bridge,
-  method,
-  args,
-}: HandleBridgeArgs) => {
-  console.log("===== bridge // handleBridge =====");
+export const handleBridge = async ({ bridge, method, args }: HandleBridgeArgs) => {
+  console.log('===== bridge // handleBridge =====');
 
   const _bridge = bridge.getState();
 
   const _method = _bridge[method];
 
-  if (typeof _method !== "function") {
+  if (typeof _method !== 'function') {
     return;
   }
 
@@ -103,15 +96,13 @@ export const handleBridge = async ({
 };
 
 export const INJECT_BRIDGE_METHODS = (bridgeNames: string[]) => {
-  console.log("===== bridge // INJECT_BRIDGE_METHODS =====");
+  console.log('===== bridge // INJECT_BRIDGE_METHODS =====');
 
   return `window.__bridgeMethods__ = ${JSON.stringify(bridgeNames)};`;
 };
 
-export const INJECT_BRIDGE_STATE = (
-  initialState: Record<string, Primitive>
-) => {
-  console.log("===== bridge // INJECT_BRIDGE_STATE =====");
+export const INJECT_BRIDGE_STATE = (initialState: Record<string, Primitive>) => {
+  console.log('===== bridge // INJECT_BRIDGE_STATE =====');
 
   return `window.__bridgeInitialState__ = ${JSON.stringify(initialState)};`;
 };

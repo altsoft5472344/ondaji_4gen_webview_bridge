@@ -1,4 +1,4 @@
-import type { PrimitiveObject } from "../../types";
+import type { PrimitiveObject } from '../types';
 
 export const mockStore = (initialState: PrimitiveObject = {}) => {
   const state = initialState;

@@ -1,31 +1,19 @@
-import type {
-  Bridge,
-  BridgeStore,
-  Primitive,
-} from "../types";
-import type React from "react";
-import {
-  forwardRef,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-} from "react";
-import type { WebViewMessageEvent, WebViewProps } from "react-native-webview";
-import WebView from "react-native-webview";
+import type React from 'react';
+import { forwardRef, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
+import type { WebViewMessageEvent, WebViewProps } from 'react-native-webview';
+import WebView from 'react-native-webview';
 
+import type { Bridge, BridgeStore, Primitive } from '../types';
 import {
+  handleBridge,
   INJECT_BRIDGE_METHODS,
   INJECT_BRIDGE_STATE,
   SAFE_NATIVE_EMITTER_EMIT,
-  handleBridge,
-} from "./integrations/bridge";
-import { INJECT_DEBUG, type LogType, handleLog } from "./integrations/console";
-import type { BridgeWebView } from "./types/webview";
+} from './bridge';
+import { handleLog, INJECT_DEBUG, type LogType } from './console';
+import type { BridgeWebView } from './types/webview';
 
-export type CreateWebViewArgs<
-  BridgeObject extends Bridge,
-> = {
+export type CreateWebViewArgs<BridgeObject extends Bridge> = {
   bridge: BridgeStore<BridgeObject>;
   debug?: boolean;
   fallback?: (method: keyof BridgeObject) => void;
@@ -35,31 +23,23 @@ export type WebMethod<T> = T & {
   isReady: boolean;
 };
 
-export const createWebView = <
-  BridgeObject extends Bridge,
->({
+export const createWebView = <BridgeObject extends Bridge>({
   bridge,
   debug,
 }: CreateWebViewArgs<BridgeObject>) => {
-  console.log("===== createWebView =====");
-
+  console.log('===== createWebView =====');
 
   const webviewRefList: React.RefObject<BridgeWebView>[] = [];
 
   bridge.subscribe((state) => {
-    console.log("bridge.subscribe((state)", state);
+    console.log('bridge.subscribe((state)', state);
     for (const ref of webviewRefList) {
-      ref?.current?.injectJavaScript(
-        SAFE_NATIVE_EMITTER_EMIT("bridgeStateChange", state)
-      );
+      ref?.current?.injectJavaScript(SAFE_NATIVE_EMITTER_EMIT('bridgeStateChange', state));
     }
   });
 
   return {
-
-    postMessage: <
-      EventName,
-    >(
+    postMessage: <EventName,>(
       eventName: EventName,
       args: any,
       options: {
@@ -68,10 +48,10 @@ export const createWebView = <
         broadcast: false,
       }
     ) => {
-      console.log("===== createWebView // postMessage =====");
+      console.log('===== createWebView // postMessage =====');
 
       let _args: any = args;
-   
+
       if (options.broadcast) {
         for (const ref of webviewRefList) {
           ref?.current?.injectJavaScript(
@@ -86,17 +66,14 @@ export const createWebView = <
         SAFE_NATIVE_EMITTER_EMIT(`postMessage/${String(eventName)}`, _args)
       );
     },
-    WebView: forwardRef<BridgeWebView, WebViewProps>(function BridgeWebView(
-      props,
-      ref
-    ) {
+    WebView: forwardRef<BridgeWebView, WebViewProps>(function BridgeWebView(props, ref) {
       const webviewRef = useRef<WebView>(null);
 
-      console.log("===== createWebView // WebView =====");
+      console.log('===== createWebView // WebView =====');
 
       /** Webview 인스턴스가 생성될때마다, 생성된 인스턴스의 ref를 webviewRefList에 추가합니다. */
       useLayoutEffect(() => {
-      console.log("===== createWebView // WebView // useLayoutEffect =====");
+        console.log('===== createWebView // WebView // useLayoutEffect =====');
 
         webviewRefList.push(webviewRef);
         return () => {
@@ -105,25 +82,23 @@ export const createWebView = <
       }, []);
 
       const initData = useMemo(() => {
-        console.log("===== createWebView // WebView // initData =====");
+        console.log('===== createWebView // WebView // initData =====');
 
         const bridgeMethods = Object.entries(bridge.getState() ?? {})
-          .filter(([_, bridge]) => typeof bridge === "function")
+          .filter(([_, bridge]) => typeof bridge === 'function')
           .map(([name]) => name);
         const initialState = Object.fromEntries(
           Object.entries(bridge.getState() ?? {}).filter(
-            ([_, value]) => typeof value !== "function"
+            ([_, value]) => typeof value !== 'function'
           )
         ) as Record<string, Primitive>;
         return { bridgeMethods, initialState };
       }, []);
 
       useEffect(() => {
-        console.log("===== createWebView // WebView // useEffect // hydrate =====");
+        console.log('===== createWebView // WebView // useEffect // hydrate =====');
 
-        webviewRef.current?.injectJavaScript(
-          SAFE_NATIVE_EMITTER_EMIT("hydrate", initData)
-        );
+        webviewRef.current?.injectJavaScript(SAFE_NATIVE_EMITTER_EMIT('hydrate', initData));
       }, [initData]);
 
       const handleMessage = async (event: WebViewMessageEvent) => {
@@ -134,14 +109,14 @@ export const createWebView = <
           return;
         }
 
-        /** 
+        /**
          * WebView에서 전달된 메시지를 파싱
          * 예: { type: "bridge", body: { method: "openBrowser", args: ["https://..."] }, bridgeId: "webview-1" }
          */
         const { type, body } = JSON.parse(event.nativeEvent.data);
 
         switch (type) {
-          case "log": {
+          case 'log': {
             const { method, args } = body as {
               method: LogType;
               args: string;
@@ -149,7 +124,7 @@ export const createWebView = <
             debug && handleLog(method, args);
             return;
           }
-          case "bridge": {
+          case 'bridge': {
             const { method, args } = body as {
               method: string;
               args: unknown[];
@@ -174,17 +149,13 @@ export const createWebView = <
             INJECT_BRIDGE_METHODS(initData.bridgeMethods),
             INJECT_BRIDGE_STATE(initData.initialState),
             props.injectedJavaScriptBeforeContentLoaded,
-            "true;",
+            'true;',
           ]
             .filter(Boolean)
-            .join("\n")}
-          injectedJavaScript={[
-            debug && INJECT_DEBUG,
-            props.injectedJavaScript,
-            "true;",
-          ]
+            .join('\n')}
+          injectedJavaScript={[debug && INJECT_DEBUG, props.injectedJavaScript, 'true;']
             .filter(Boolean)
-            .join("\n")}
+            .join('\n')}
         />
       );
     }),

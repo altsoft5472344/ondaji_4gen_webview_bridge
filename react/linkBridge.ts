@@ -1,30 +1,23 @@
-import type { Bridge, BridgeStore, ExtractStore } from "../types";
-import { createEvents } from "../utils";
+import type { Bridge, BridgeStore, ExtractStore } from '../types';
+import { createEvents } from '../utils';
+import { BridgeInstance } from './bridgeInstance';
+import { mockStore } from './mockStore';
 
-import { BridgeInstance } from "./internal/bridgeInstance";
-import { mockStore } from "./internal/mockStore";
-
-export interface LinkBridgeOptions<
-  T extends BridgeStore<T extends Bridge ? T : any>
-> {
+export interface LinkBridgeOptions<T extends BridgeStore<T extends Bridge ? T : any>> {
   initialBridge?: Partial<ExtractStore<T>>;
   onReady?: (method: BridgeInstance<T>) => void;
 }
 
-
 export const linkBridge = <T extends BridgeStore<T extends Bridge ? T : any>>(
   options: LinkBridgeOptions<T> = {}
 ): BridgeInstance<T> => {
-  console.log("===== linkBridge =====");
+  console.log('===== linkBridge =====');
 
   /** 서버 사이드 렌더링(SSR) 환경에서의 처리 */
-  if (typeof window === "undefined") {
+  if (typeof window === 'undefined') {
     return {
       addEventListener: (_eventName, _listener) => () => {},
-      store: mockStore(options?.initialBridge) as unknown as Omit<
-        T,
-        "setState"
-      >,
+      store: mockStore(options?.initialBridge) as unknown as Omit<T, 'setState'>,
     } as BridgeInstance<T>;
   }
 
@@ -38,12 +31,7 @@ export const linkBridge = <T extends BridgeStore<T extends Bridge ? T : any>>(
   const bridgeMethods = window.__bridgeMethods__ ?? [];
   const nativeInitialState = window.__bridgeInitialState__ ?? {};
 
-  const instance = new BridgeInstance(
-    options,
-    emitter,
-    bridgeMethods,
-    nativeInitialState
-  );
+  const instance = new BridgeInstance(options, emitter, bridgeMethods, nativeInitialState);
 
   const { onReady } = options;
 
